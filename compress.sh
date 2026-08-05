@@ -11,6 +11,10 @@ KINDS=(
   "rawfile2 rawfile2.jpg full"
   "rawfile3 rawfile3.txt lean"
   "rawfile4 rawfile4.bmp lean"
+  "rawfile5 rawfile5.bin full"
+  "rawfile6 rawfile6.json full"
+  "rawfile7 rawfile7.c full"
+  "rawfile8 rawfile8.fa full"
   "combination combination.bin lean"
 )
 
@@ -18,7 +22,9 @@ rm -rf normal password split
 mkdir -p normal password split
 
 # 重建 combination.bin = 全部文件拼接
-cat "$RAW/rawfile1.txt" "$RAW/rawfile2.jpg" "$RAW/rawfile3.txt" "$RAW/rawfile4.bmp" > "$RAW/combination.bin"
+cat "$RAW/rawfile1.txt" "$RAW/rawfile2.jpg" "$RAW/rawfile3.txt" "$RAW/rawfile4.bmp" \
+    "$RAW/rawfile5.bin" "$RAW/rawfile6.json" "$RAW/rawfile7.c" "$RAW/rawfile8.fa" \
+    > "$RAW/combination.bin"
 
 gen() {
   local layer="$1" kind="$2" fname="$3" policy="$4"

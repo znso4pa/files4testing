@@ -63,4 +63,50 @@ if [ "$FAIL" -gt 0 ]; then
   printf '  %s\n' "${FAILED[@]}"
   exit 1
 fi
-echo "All test vectors verified OK."
+echo "All positive test vectors verified OK."
+
+# --- Negative cases: a correct decompressor must REJECT these --------------
+NPASS=0
+NFAIL=0
+declare -a NFAILED=()
+
+# expected_fail path format password  -> returns 0 if the tool FAILS as expected
+expected_fail() {
+  local path="$1" fmt="$2" pw="$3"
+  case "$fmt" in
+    gzip)   ! gzip -dc "$path" > "$TMP/out" 2>/dev/null ;;
+    xz)     ! xz -dc "$path" > "$TMP/out" 2>/dev/null ;;
+    7z)     if [ "$pw" = "-" ]; then ! 7z x -so -y "$path" > "$TMP/out" 2>/dev/null; else ! 7z x -so -y -p"$pw" "$path" > "$TMP/out" 2>/dev/null; fi ;;
+    zip)    if [ "$pw" = "-" ]; then ! unzip -p "$path" > "$TMP/out" 2>/dev/null; else ! unzip -P "$pw" -p "$path" > "$TMP/out" 2>/dev/null; fi ;;
+    rar)    if [ "$pw" = "-" ]; then ! unrar p -inul "$path" > "$TMP/out" 2>/dev/null; else ! unrar p -inul -p"$pw" "$path" > "$TMP/out" 2>/dev/null; fi ;;
+    *) return 1 ;;
+  esac
+}
+
+if [ -f faults/manifest.json ]; then
+  python3 - <<'PY' > /tmp/verify_faults.tsv
+import json
+m = json.load(open("faults/manifest.json"))
+for e in m["entries"]:
+    print("\t".join([e["path"], e["format"], e["reason"], e["password"] or "-"]))
+PY
+
+  while IFS=$'\t' read -r path fmt reason pw; do
+    if expected_fail "$path" "$fmt" "$pw"; then
+      NPASS=$((NPASS+1))
+    else
+      echo "NEGATIVE-FAIL $path (decompressed successfully, should have been rejected: $reason)"
+      NFAIL=$((NFAIL+1)); NFAILED+=("$path")
+    fi
+  done < /tmp/verify_faults.tsv
+fi
+
+echo
+echo "=== Negative cases ==="
+echo "NEG-PASS: $NPASS  NEG-FAIL: $NFAIL"
+if [ "$NFAIL" -gt 0 ]; then
+  echo "Negative cases that were NOT rejected:"
+  printf '  %s\n' "${NFAILED[@]}"
+  exit 1
+fi
+echo "All negative test vectors rejected OK."

@@ -10,6 +10,10 @@ KINDS=(
   "rawfile2 rawfile2.jpg"
   "rawfile3 rawfile3.txt"
   "rawfile4 rawfile4.bmp"
+  "rawfile5 rawfile5.bin"
+  "rawfile6 rawfile6.json"
+  "rawfile7 rawfile7.c"
+  "rawfile8 rawfile8.fa"
   "combination combination.bin"
 )
 
@@ -36,10 +40,14 @@ cat >> REPORT.md <<'EOF'
 - `rawfile2.jpg`（9.4 MB）：已压缩图片，近乎不可压
 - `rawfile3.txt`（30.8 MB）：Gutenberg 公版英文书拼接，高度可压缩
 - `rawfile4.bmp`（29.9 MB）：NASA 公版月球照片转 32 位 RGBA 位图，半可压
-- `combination.bin`（69.7 MB）：以上四个文件直接拼接，作为组合测试输入
+- `rawfile5.bin`（1.5 MB）：真随机数据，完全不可压
+- `rawfile6.json`（1.9 MB）：结构化 JSON 记录，中等可压
+- `rawfile7.c`（1.4 MB）：合成 C 源码，中等可压
+- `rawfile8.fa`（1.4 MB）：DNA 序列（FASTA 格式），高可压
+- `combination.bin`（全部文件拼接）：作为组合测试输入
 
 档位策略：
-- `rawfile1` / `rawfile2`：全档位（多等级）
+- `rawfile1` / `rawfile2` / `rawfile5` ~ `rawfile8`：全档位（多等级）
 - `rawfile3` / `rawfile4` / `combination`：精简档位（每格式一个代表等级），控制体积
 
 ## normal / 压缩率

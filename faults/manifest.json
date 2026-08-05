@@ -1,0 +1,84 @@
+{
+  "name": "files4testing negative test vectors",
+  "description": "A correct decompressor must REJECT every entry: attempting to decompress must fail cleanly (non-zero exit / error), not crash or produce output. verify.sh asserts reference tools fail.",
+  "entries": [
+    {
+      "path": "faults/truncated-rawfile1.g9.gz",
+      "format": "gzip",
+      "reason": "truncated gzip stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.x9.xz",
+      "format": "xz",
+      "reason": "truncated xz stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.mx9.7z",
+      "format": "7z",
+      "reason": "truncated 7z archive",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.m5.rar",
+      "format": "rar",
+      "reason": "truncated rar archive",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.z9.zip",
+      "format": "zip",
+      "reason": "truncated zip archive",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.g9.gz",
+      "format": "gzip",
+      "reason": "corrupted gzip stream (CRC)",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.mx9.7z",
+      "format": "7z",
+      "reason": "corrupted 7z archive",
+      "password": null
+    },
+    {
+      "path": "faults/wrongpass-rawfile1.mx9.7z",
+      "format": "7z",
+      "reason": "wrong password (7z)",
+      "password": "999"
+    },
+    {
+      "path": "faults/wrongpass-rawfile1.z9.zip",
+      "format": "zip",
+      "reason": "wrong password (zip)",
+      "password": "999"
+    },
+    {
+      "path": "faults/wrongpass-rawfile1.m5.rar",
+      "format": "rar",
+      "reason": "wrong password (rar)",
+      "password": "999"
+    },
+    {
+      "path": "faults/missingvol-rawfile2.part01.rar",
+      "format": "rar",
+      "reason": "missing subsequent rar volumes",
+      "password": null
+    },
+    {
+      "path": "faults/missingvol-combination.part01.rar",
+      "format": "rar",
+      "reason": "missing subsequent rar volumes",
+      "password": null
+    },
+    {
+      "path": "faults/empty.bin",
+      "format": "gzip",
+      "reason": "empty input",
+      "password": null
+    }
+  ]
+}

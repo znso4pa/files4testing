@@ -18,6 +18,10 @@ RAW_FILES = {
     "rawfile2": "rawfiles/rawfile2.jpg",
     "rawfile3": "rawfiles/rawfile3.txt",
     "rawfile4": "rawfiles/rawfile4.bmp",
+    "rawfile5": "rawfiles/rawfile5.bin",
+    "rawfile6": "rawfiles/rawfile6.json",
+    "rawfile7": "rawfiles/rawfile7.c",
+    "rawfile8": "rawfiles/rawfile8.fa",
     "combination": "rawfiles/combination.bin",
 }
 

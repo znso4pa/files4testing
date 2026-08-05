@@ -15,13 +15,18 @@ machine-verifiable test inputs.
 If you are implementing a decompressor from scratch, you need test files — and
 you need to *know* what the correct output is. This repo provides:
 
-- **260 compressed files** in 10 formats (`7z`, `zip`, `rar`, `gzip`, `bzip2`,
+- **443 compressed files** in 10 formats (`7z`, `zip`, `rar`, `gzip`, `bzip2`,
   `xz`, `lzma`, `lz4`, `zstd`, `brotli`), each with a known expected output.
+  (279 test vectors in `manifest.json` + 13 negative cases in `faults/`.)
 - **3 layers**: plain, password-protected (password `123`), and 1 MB split volumes.
 - **`manifest.json`**: a machine-readable catalog mapping every file to its
   expected output **SHA-256**, so you can assert correctness automatically.
 - Raw files spanning very different compressibility: tiny text, incompressible
-  JPEG, 30 MB highly-compressible text, 30 MB semi-compressible 32-bit RGBA bitmap.
+  JPEG, 30 MB highly-compressible text, 30 MB semi-compressible 32-bit RGBA
+  bitmap, random data, JSON, source code, and DNA (FASTA).
+- **Negative cases** in `faults/` (corrupted / truncated / wrong-password /
+  missing-volume) to verify your decompressor rejects bad input cleanly.
+- Reference harnesses in **Rust**, **Python**, and **Go**.
 
 ## Quick start (for implementers)
 
@@ -60,7 +65,11 @@ volume** (`.part01.rar` / `.7z.001`); decompress the whole set to get the output
 | `rawfiles/rawfile2.jpg` | 9.4 MB | Already-compressed image, nearly incompressible |
 | `rawfiles/rawfile3.txt` | 30.8 MB | Concatenated Project Gutenberg books, highly compressible |
 | `rawfiles/rawfile4.bmp` | 29.9 MB | NASA photo converted to 32-bit RGBA bitmap, semi-compressible |
-| `rawfiles/combination.bin` | 69.7 MB | The four files concatenated, as a combined input |
+| `rawfiles/rawfile5.bin` | 1.5 MB | True random data (urandom), incompressible |
+| `rawfiles/rawfile6.json` | 1.9 MB | Structured JSON records, moderate compressibility |
+| `rawfiles/rawfile7.c` | 1.4 MB | Synthetic C source code, moderate compressibility |
+| `rawfiles/rawfile8.fa` | 1.4 MB | DNA sequences (FASTA), highly compressible |
+| `rawfiles/combination.bin` | ~76 MB | All files concatenated, as a combined input |
 
 SHA-256 of every raw file is in `REPORT.md` and `manifest.json`.
 
@@ -74,19 +83,24 @@ split/     1 MB split volumes (formats supporting volumes: 7z/rar)
   ├─ rawfile2/      rawfile2 compressed
   ├─ rawfile3/      rawfile3 compressed
   ├─ rawfile4/      rawfile4 compressed
+  ├─ rawfile5/      rawfile5 compressed
+  ├─ rawfile6/      rawfile6 compressed
+  ├─ rawfile7/      rawfile7 compressed
+  ├─ rawfile8/      rawfile8 compressed
   └─ combination/   combination.bin compressed
+faults/    negative cases (corrupted / truncated / wrong-password / missing-volume)
 ```
 
 ## Level strategy
 
 | Files | Strategy |
 |-------|----------|
-| `rawfile1` / `rawfile2` | Full levels (every format × multiple levels) |
+| `rawfile1` / `rawfile2` / `rawfile5`–`rawfile8` | Full levels (every format × multiple levels) |
 | `rawfile3` / `rawfile4` / `combination` | One representative level per format, to keep size manageable |
 
 ## Formats and levels
 
-Full-level files (`rawfile1` / `rawfile2`):
+Full-level files (`rawfile1` / `rawfile2` / `rawfile5`–`rawfile8`):
 
 | Format | Extension | Levels |
 |--------|-----------|--------|
@@ -121,6 +135,22 @@ All files in `password/` are encrypted with the password **`123`**.
 - 7z: `.7z.001`, `.7z.002` ... — start extraction from `.001`
 - rar: `.part01.rar`, `.part02.rar` ... — start extraction from `part01`
 
+## Negative cases (`faults/`)
+
+A correct decompressor must **reject** every file in `faults/` (fail cleanly,
+not crash, not emit output):
+
+| Category | Files |
+|----------|-------|
+| Truncated | half of a `.gz` / `.xz` / `.7z` / `.rar` / `.zip` |
+| Corrupted | flipped bytes mid-file (`.gz` / `.7z`) |
+| Wrong password | `password/` archives opened with an incorrect password |
+| Missing volumes | only `part01` of a split `.rar` present |
+| Empty | zero-length input |
+
+`verify.sh` asserts reference tools reject all of them
+(`faults/manifest.json` lists the expected failures).
+
 ## Tooling
 
 | Script | Purpose |
@@ -128,8 +158,11 @@ All files in `password/` are encrypted with the password **`123`**.
 | `compress.sh` | Regenerate all compressed files from `rawfiles/` |
 | `gen_manifest.py` | Generate `manifest.json` (test vector catalog) |
 | `gen_report.sh` | Generate `REPORT.md` (sizes, ratios, SHA-256) |
-| `verify.sh` | Decompress every file with reference tools and assert SHA-256 |
+| `verify.sh` | Decompress every file with reference tools and assert SHA-256 (incl. negative cases) |
+| `gen_faults.sh` / `gen_faults_manifest.py` | Generate negative cases and `faults/manifest.json` |
 | `harness/` | Rust example: run your own `Decompressor` against every vector |
+| `harness_py/run.py` | Python example harness |
+| `harness_go/` | Go example harness |
 
 ## Data sources & license
 
@@ -139,6 +172,10 @@ All files in `password/` are encrypted with the password **`123`**.
 | `rawfile2.jpg` | See REPORT.md (copyright-free material) | Public domain |
 | `rawfile3.txt` | [Project Gutenberg](https://www.gutenberg.org/) public-domain books | Public domain (redistribution subject to Project Gutenberg license/trademark terms) |
 | `rawfile4.bmp` | [NASA PIA00405](https://images.nasa.gov/details/PIA00405), Moon photographed by Galileo, 1992 | Public domain |
+| `rawfile5.bin` | Generated with `/dev/urandom` | Generated (no copyright) |
+| `rawfile6.json` | Synthetic structured records | Generated (no copyright) |
+| `rawfile7.c` | Synthetic C source | Generated (no copyright) |
+| `rawfile8.fa` | Synthetic DNA (FASTA) | Generated (no copyright) |
 
 This repository (scripts, docs, compressed outputs) is licensed under the
 **MIT License** — see `LICENSE`.

@@ -45,6 +45,21 @@ struct Manifest {
     entries: Vec<Entry>,
 }
 
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct FaultEntry {
+    path: String,
+    format: String,
+    reason: String,
+    password: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct FaultManifest {
+    entries: Vec<FaultEntry>,
+}
+
 // ===========================================================================
 // Implement your decompressor here.
 // ===========================================================================
@@ -206,11 +221,60 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     println!("\nPASS: {pass}  FAIL: {fail}");
     if fail > 0 {
-        Err("some vectors failed".into())
-    } else {
-        println!("All test vectors verified OK.");
-        Ok(())
+        return Err("some vectors failed".into());
     }
+    println!("All positive test vectors verified OK.");
+
+    // --- Negative cases: a correct decompressor must REJECT these ----------
+    let faults_path = root.join("faults").join("manifest.json");
+    if faults_path.exists() {
+        let faults: FaultManifest =
+            serde_json::from_str(&fs::read_to_string(&faults_path)?)?;
+        let mut np = 0usize;
+        let mut nf = 0usize;
+        for fe in &faults.entries {
+            let full = root.join(&fe.path);
+            if !full.exists() {
+                println!("MISSING {path}", path = fe.path);
+                nf += 1;
+                continue;
+            }
+            let input = fs::read(&full)?;
+            // For negative cases, pass the (wrong) password through.
+            let entry = Entry {
+                layer: "fault".into(),
+                kind: "fault".into(),
+                path: fe.path.clone(),
+                format: fe.format.clone(),
+                level: "fault".into(),
+                is_archive: false,
+                is_volume: false,
+                volume_count: None,
+                password: fe.password.clone(),
+                expected_file: String::new(),
+                expected_size: 0,
+                expected_sha256: String::new(),
+            };
+            match d.decompress(&entry, &input) {
+                Ok(_) => {
+                    println!("[neg-fail] {path}: decompressed but should have been rejected ({reason})",
+                        path = fe.path, reason = fe.reason);
+                    nf += 1;
+                }
+                Err(_) => {
+                    println!("[neg-ok] {path} ({reason})", path = fe.path, reason = fe.reason);
+                    np += 1;
+                }
+            }
+        }
+        println!("\nNEG-PASS: {np}  NEG-FAIL: {nf}");
+        if nf > 0 {
+            return Err("some negative cases were not rejected".into());
+        }
+        println!("All negative test vectors rejected OK.");
+    }
+
+    Ok(())
 }
 
 fn main() {
