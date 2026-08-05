@@ -27,6 +27,9 @@
 |------|---------|--------|--------|
 | normal/rawfile1/rawfile1.b1.bz2 | 1113 | 633 | 56.87% |
 | normal/rawfile1/rawfile1.b9.bz2 | 1113 | 633 | 56.87% |
+| normal/rawfile1/rawfile1.br1.br | 1113 | 665 | 59.75% |
+| normal/rawfile1/rawfile1.br6.br | 1113 | 595 | 53.46% |
+| normal/rawfile1/rawfile1.br9.br | 1113 | 596 | 53.55% |
 | normal/rawfile1/rawfile1.g1.gz | 1113 | 651 | 58.49% |
 | normal/rawfile1/rawfile1.g6.gz | 1113 | 639 | 57.41% |
 | normal/rawfile1/rawfile1.g9.gz | 1113 | 639 | 57.41% |
@@ -52,6 +55,9 @@
 | normal/rawfile1/rawfile1.zst-22.zst | 1113 | 631 | 56.69% |
 | normal/rawfile2/rawfile2.b1.bz2 | 9383744 | 9346677 | 99.60% |
 | normal/rawfile2/rawfile2.b9.bz2 | 9383744 | 9341365 | 99.55% |
+| normal/rawfile2/rawfile2.br1.br | 9383744 | 9361808 | 99.77% |
+| normal/rawfile2/rawfile2.br6.br | 9383744 | 9383761 | 100.00% |
+| normal/rawfile2/rawfile2.br9.br | 9383744 | 9383761 | 100.00% |
 | normal/rawfile2/rawfile2.g1.gz | 9383744 | 9339856 | 99.53% |
 | normal/rawfile2/rawfile2.g6.gz | 9383744 | 9344539 | 99.58% |
 | normal/rawfile2/rawfile2.g9.gz | 9383744 | 9344539 | 99.58% |
@@ -76,6 +82,7 @@
 | normal/rawfile2/rawfile2.zst-19.zst | 9383744 | 9337998 | 99.51% |
 | normal/rawfile2/rawfile2.zst-22.zst | 9383744 | 9337997 | 99.51% |
 | normal/rawfile3/rawfile3.b9.bz2 | 32333779 | 8739528 | 27.03% |
+| normal/rawfile3/rawfile3.br9.br | 32333779 | 9616028 | 29.74% |
 | normal/rawfile3/rawfile3.g9.gz | 32333779 | 11899246 | 36.80% |
 | normal/rawfile3/rawfile3.l9.lzma | 32333779 | 8240624 | 25.49% |
 | normal/rawfile3/rawfile3.lz4-9.lz4 | 32333779 | 13705495 | 42.39% |
@@ -85,6 +92,7 @@
 | normal/rawfile3/rawfile3.z9.zip | 32333779 | 11890184 | 36.77% |
 | normal/rawfile3/rawfile3.zst-19.zst | 32333779 | 8768639 | 27.12% |
 | normal/rawfile4/rawfile4.b9.bz2 | 31360054 | 8775865 | 27.98% |
+| normal/rawfile4/rawfile4.br9.br | 31360054 | 10730602 | 34.22% |
 | normal/rawfile4/rawfile4.g9.gz | 31360054 | 13186031 | 42.05% |
 | normal/rawfile4/rawfile4.l9.lzma | 31360054 | 8156071 | 26.01% |
 | normal/rawfile4/rawfile4.lz4-9.lz4 | 31360054 | 15440352 | 49.24% |
@@ -94,6 +102,7 @@
 | normal/rawfile4/rawfile4.z9.zip | 31360054 | 13198370 | 42.09% |
 | normal/rawfile4/rawfile4.zst-19.zst | 31360054 | 10185837 | 32.48% |
 | normal/combination/combination.b9.bz2 | 73078690 | 26902440 | 36.81% |
+| normal/combination/combination.br9.br | 73078690 | 29747991 | 40.71% |
 | normal/combination/combination.g9.gz | 73078690 | 34432046 | 47.12% |
 | normal/combination/combination.l9.lzma | 73078690 | 25763606 | 35.25% |
 | normal/combination/combination.lz4-9.lz4 | 73078690 | 38536775 | 52.73% |

@@ -77,6 +77,11 @@ gen() {
       lzma -c -$lvl "$src" > "$out/$stem.l$lvl.lzma"
     done
 
+    for lvl in 1 6 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      brotli -c -q $lvl "$src" > "$out/$stem.br$lvl.br"
+    done
+
     for lvl in 1 9 12; do
       [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
       lz4 -$lvl -c "$src" > "$out/$stem.lz4-$lvl.lz4"
