@@ -19,12 +19,13 @@ if [ ! -d normal ] || [ ! -d rawfiles ]; then
   exit 2
 fi
 
-# Produce TSV: path<TAB>format<TAB>password<TAB>expected_sha256
+# Produce TSV: path<TAB>format<TAB>password<TAB>expected_file<TAB>expected_sha256
 python3 - <<'PY' > /tmp/verify_manifest.tsv
 import json
 m = json.load(open("manifest.json"))
 for e in m["entries"]:
-    print("\t".join([e["path"], e["format"], e["password"] or "-", e["expected_sha256"]]))
+    print("\t".join([e["path"], e["format"], e["password"] or "-",
+                     e["expected_file"], e["expected_sha256"]]))
 PY
 
 PASS=0
@@ -34,8 +35,8 @@ TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
 extract_to_file() {
-  # args: path format password  -> writes decompressed bytes to $TMP/out
-  local path="$1" fmt="$2" pw="$3"
+  # args: path format password expected_file  -> writes decompressed bytes to $TMP/out
+  local path="$1" fmt="$2" pw="$3" expfile="$4"
   case "$fmt" in
     gzip)  gzip -dc "$path" > "$TMP/out" ;;
     bzip2) bzip2 -dc "$path" > "$TMP/out" ;;
@@ -47,13 +48,29 @@ extract_to_file() {
     zip)   if [ "$pw" = "-" ]; then unzip -p "$path" > "$TMP/out" 2>/dev/null; else unzip -P "$pw" -p "$path" > "$TMP/out" 2>/dev/null; fi ;;
     7z)    if [ "$pw" = "-" ]; then 7z x -so -y "$path" > "$TMP/out"; else 7z x -so -y -p"$pw" "$path" > "$TMP/out"; fi ;;
     rar)   if [ "$pw" = "-" ]; then unrar p -inul "$path" > "$TMP/out"; else unrar p -inul -p"$pw" "$path" > "$TMP/out"; fi ;;
+    tar)   tar -xOf "$path" "$(basename "$expfile")" > "$TMP/out" ;;
+    tar.*) # tar + compressor: decompress stream first, then untar
+      local tmpgz="$TMP/tarstream"
+      local inner="${fmt#tar.}"
+      case "$inner" in
+        gzip)  gzip -dc "$path" > "$tmpgz" ;;
+        bzip2) bzip2 -dc "$path" > "$tmpgz" ;;
+        xz)    xz -dc "$path" > "$tmpgz" ;;
+        lzma)  lzma -dc "$path" > "$tmpgz" ;;
+        lz4)   lz4 -dc "$path" > "$tmpgz" 2>/dev/null ;;
+        zstd)  zstd -dc "$path" > "$tmpgz" ;;
+        brotli) brotli -dc "$path" > "$tmpgz" ;;
+        *) echo "unknown tar inner: $inner" >&2; return 1 ;;
+      esac
+      tar -xOf "$tmpgz" "$(basename "$expfile")" > "$TMP/out"
+      ;;
     *) echo "unknown format: $fmt" >&2; return 1 ;;
   esac
 }
 
-while IFS=$'\t' read -r path fmt pw expected; do
+while IFS=$'\t' read -r path fmt pw expfile expected; do
   [ -n "$FAST" ] && [[ "$path" == *combination* ]] && { echo "SKIP $path (--fast)"; continue; }
-  if ! extract_to_file "$path" "$fmt" "$pw"; then
+  if ! extract_to_file "$path" "$fmt" "$pw" "$expfile"; then
     echo "ERROR $path (decompress failed)"
     FAIL=$((FAIL+1)); FAILED+=("$path")
     continue

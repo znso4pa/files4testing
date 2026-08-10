@@ -99,6 +99,47 @@ gen() {
       [ "$lvl" -ge 20 ] && zopts+=(--ultra)
       zstd -$lvl "${zopts[@]}" "$src" > "$out/$stem.zst-$lvl.zst" 2>/dev/null
     done
+
+    # --- tar + tar+compressor (archive formats, normal layer only) --------
+    # 纯 tar（不压缩，作为归档基线）
+    tar -C "$RAW" -cf "$out/$stem.tar.tar" "$fname"
+
+    for lvl in 1 6 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | gzip -$lvl -c > "$out/$stem.tar.g$lvl.tar.gz"
+    done
+
+    for lvl in 1 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | bzip2 -$lvl -c > "$out/$stem.tar.b$lvl.tar.bz2"
+    done
+
+    for lvl in 1 6 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | xz -$lvl -c > "$out/$stem.tar.x$lvl.tar.xz"
+    done
+
+    for lvl in 1 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | lzma -$lvl -c > "$out/$stem.tar.l$lvl.tar.lzma"
+    done
+
+    for lvl in 1 6 9; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | brotli -c -q $lvl > "$out/$stem.tar.br$lvl.tar.br"
+    done
+
+    for lvl in 1 9 12; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "9" ] && continue
+      tar -C "$RAW" -cf - "$fname" | lz4 -$lvl -c > "$out/$stem.tar.lz4-$lvl.tar.lz4"
+    done
+
+    for lvl in 1 19 22; do
+      [ "$policy" = "lean" ] && [ "$lvl" != "19" ] && continue
+      local zopts=(-c)
+      [ "$lvl" -ge 20 ] && zopts+=(--ultra)
+      tar -C "$RAW" -cf - "$fname" | zstd -$lvl "${zopts[@]}" > "$out/$stem.tar.zst-$lvl.tar.zst" 2>/dev/null
+    done
   fi
 }
 

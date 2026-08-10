@@ -1,6 +1,6 @@
 # files4testing — 压缩测试向量
 
-提供多个无版权原始文件，压缩为 **10 种格式 × 3 层**（normal / password / 分卷），供自己实现
+提供多个无版权原始文件，压缩为 **10 种格式 + 7 种 tar 变体 × 3 层**（normal / password / 分卷），供自己实现
 解压器/压缩器（如 Rust）的人直接使用的、可机器校验的测试输入。
 
 > **注意：本仓库约 2 GB（含 git 历史），clone 所需时间较多，请预留足够磁盘空间与网络带宽。**
@@ -63,8 +63,23 @@ faults/    负向用例（损坏 / 截断 / 错误密码 / 缺卷）
 | zstd | `.zst` | zst-1 / zst-19 / zst-22 |
 | brotli | `.br` | br1 / br6 / br9 |
 
+tar 系列（仅 normal 层，归档内只含该原始文件）：
+
+| 格式 | 扩展名 | 等级 |
+|------|--------|------|
+| tar（纯归档） | `.tar.tar` | — |
+| tar + gzip | `.tar.<lvl>.tar.gz` | g1 / g6 / g9 |
+| tar + bzip2 | `.tar.<lvl>.tar.bz2` | b1 / b9 |
+| tar + xz | `.tar.<lvl>.tar.xz` | x1 / x6 / x9 |
+| tar + lzma | `.tar.<lvl>.tar.lzma` | l1 / l9 |
+| tar + lz4 | `.tar.<lvl>.tar.lz4` | lz4-1 / lz4-9 / lz4-12 |
+| tar + zstd | `.tar.<lvl>.tar.zst` | zst-1 / zst-19 / zst-22 |
+| tar + brotli | `.tar.<lvl>.tar.br` | br1 / br6 / br9 |
+
 精简档位文件（rawfile3 / rawfile4 / combination）每格式一个等级：
-7z-mx9、zip-z9、rar-m5、gzip-g9、bzip2-b9、xz-x9、lzma-l9、lz4-lz4-9、zstd-zst-19。
+7z-mx9、zip-z9、rar-m5、gzip-g9、bzip2-b9、xz-x9、lzma-l9、lz4-lz4-9、zstd-zst-19、
+以及 tar + 各压缩器最高档（tar.g9.tar.gz、tar.b9.tar.bz2、tar.x9.tar.xz、
+tar.l9.tar.lzma、tar.lz4-9.tar.lz4、tar.zst-19.tar.zst、tar.br9.tar.br）。
 
 ## 命名规则
 

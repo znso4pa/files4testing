@@ -132,7 +132,42 @@ impl Decompressor for MyDecompressor {
                     tool("unrar", &["p", "-inul", path], cwd)
                 }
             }
-            other => Err(format!("unsupported format: {other}").into()),
+            "tar" => {
+                let f = Path::new(&entry.expected_file)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned();
+                tool("tar", &["-xOf", path, &f], cwd)
+            }
+            other => {
+                if let Some(inner) = other.strip_prefix("tar.") {
+                    // tar + compressor: decompress stream, then untar
+                    let (tool_name, flag) = match inner {
+                        "gzip" => ("gzip", "-dc"),
+                        "bzip2" => ("bzip2", "-dc"),
+                        "xz" => ("xz", "-dc"),
+                        "lzma" => ("lzma", "-dc"),
+                        "lz4" => ("lz4", "-dc"),
+                        "zstd" => ("zstd", "-dc"),
+                        "brotli" => ("brotli", "-dc"),
+                        _ => return Err(format!("unsupported tar inner: {inner}").into()),
+                    };
+                    let f = Path::new(&entry.expected_file)
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .into_owned();
+                    let stream = tool(tool_name, &[flag, path], cwd)?;
+                    let tmp = cwd.join(".harness_tmp_tar");
+                    std::fs::write(&tmp, &stream)?;
+                    let result = tool("tar", &["-xOf", tmp.to_str().unwrap(), &f], cwd);
+                    let _ = std::fs::remove_file(&tmp);
+                    result
+                } else {
+                    Err(format!("unsupported format: {other}").into())
+                }
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type RawFile struct {
@@ -85,7 +86,42 @@ func decompress(entry Entry) ([]byte, error) {
 		} else {
 			args = []string{"p", "-inul", path}
 		}
+	case "tar":
+		name = "tar"
+		args = []string{"-xOf", path, filepath.Base(entry.ExpectedFile)}
 	default:
+		if strings.HasPrefix(entry.Format, "tar.") {
+			inner := strings.TrimPrefix(entry.Format, "tar.")
+			tools := map[string]string{
+				"gzip": "gzip", "bzip2": "bzip2", "xz": "xz",
+				"lzma": "lzma", "lz4": "lz4", "zstd": "zstd", "brotli": "brotli",
+			}
+			tn, ok := tools[inner]
+			if !ok {
+				return nil, fmt.Errorf("unsupported tar inner: %s", inner)
+			}
+			stream, err := exec.Command(tn, "-dc", path).Output()
+			if err != nil {
+				return nil, fmt.Errorf("%s failed: %v", tn, err)
+			}
+			tmp, err := os.CreateTemp("", "tarstream-*")
+			if err != nil {
+				return nil, err
+			}
+			tmpName := tmp.Name()
+			if _, err := tmp.Write(stream); err != nil {
+				tmp.Close()
+				os.Remove(tmpName)
+				return nil, err
+			}
+			tmp.Close()
+			out, err := exec.Command("tar", "-xOf", tmpName, filepath.Base(entry.ExpectedFile)).Output()
+			os.Remove(tmpName)
+			if err != nil {
+				return nil, fmt.Errorf("tar failed: %v", err)
+			}
+			return out, nil
+		}
 		return nil, fmt.Errorf("unsupported format: %s", entry.Format)
 	}
 

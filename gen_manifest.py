@@ -26,10 +26,10 @@ RAW_FILES = {
 }
 
 # 归档容器格式（解压出文件）vs 流式格式（解压出字节流）
-ARCHIVE_FORMATS = {"7z", "zip", "rar"}
+ARCHIVE_FORMATS = {"7z", "zip", "rar", "tar"}
 
 FORMAT_OF = {
-    "7z": "7z", "zip": "zip", "rar": "rar",
+    "7z": "7z", "zip": "zip", "rar": "rar", "tar": "tar",
     "gz": "gzip", "bz2": "bzip2", "xz": "xz",
     "lzma": "lzma", "lz4": "lz4", "zst": "zstd", "br": "brotli",
 }
@@ -68,14 +68,33 @@ def main():
                 if canonical != p:
                     continue
                 rel = os.path.relpath(canonical, ROOT)
-                # 解析格式与等级：name.<tag>.<ext>
-                m = re.match(r"^(.+)\.([^.]*)\.([a-z0-9]{2,4})$", fn)
-                if not m:
-                    continue
-                stem, tag, ext = m.groups()
-                fmt = FORMAT_OF.get(ext)
-                if fmt is None:
-                    continue
+                # 解析格式与等级
+                parts = fn.split(".")
+                # tar 纯归档: [kind, "tar", "tar"]
+                if len(parts) == 3 and parts[1] == "tar" and parts[2] == "tar":
+                    if parts[0] != kind:
+                        continue
+                    fmt, level, is_archive = "tar", "tar", True
+                # tar 变体: [kind, "tar", lvl, "tar", ext]
+                elif len(parts) == 5 and parts[1] == "tar" and parts[3] == "tar":
+                    if parts[0] != kind:
+                        continue
+                    inner = FORMAT_OF.get(parts[4])
+                    if inner is None:
+                        continue
+                    fmt = "tar." + inner
+                    level = parts[2]
+                    is_archive = True
+                else:
+                    m = re.match(r"^(.+)\.([^.]*)\.([a-z0-9]{2,4})$", fn)
+                    if not m:
+                        continue
+                    stem, tag, ext = m.groups()
+                    fmt = FORMAT_OF.get(ext)
+                    if fmt is None:
+                        continue
+                    level = tag
+                    is_archive = fmt in ARCHIVE_FORMATS
                 vol_count = None
                 if layer == "split":
                     if re.search(r"\.part\d+\.rar$", fn):
@@ -89,8 +108,8 @@ def main():
                     "kind": kind,
                     "path": rel,
                     "format": fmt,
-                    "level": tag,
-                    "is_archive": fmt in ARCHIVE_FORMATS,
+                    "level": level,
+                    "is_archive": is_archive,
                     "is_volume": layer == "split",
                     "volume_count": vol_count,
                     "password": "123" if layer == "password" else None,
@@ -103,9 +122,9 @@ def main():
         "name": "files4testing compression test vectors",
         "description": (
             "Decompress each entry's path and assert sha256(output bytes) == "
-            "expected_sha256. Archive formats (7z/zip/rar) contain exactly one "
-            "file named like the raw file; stream formats decompress to the raw "
-            "byte stream directly."
+            "expected_sha256. Archive formats (7z/zip/rar/tar and tar+compressor "
+            "variants) contain exactly one file named like the raw file; stream "
+            "formats decompress to the raw byte stream directly."
         ),
         "raw_files": {k: {"path": v, "size": sizes[k], "sha256": hashes[k]}
                       for k, v in RAW_FILES.items()},

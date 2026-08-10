@@ -3,3 +3,7 @@ password/
 split/
 rawfiles/
 faults/
+.DS_Store
+harness/target/
+harness_go/harness_go
+harness_py/__pycache__/

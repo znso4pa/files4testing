@@ -51,6 +51,30 @@ def decompress(entry: dict, input_bytes: bytes) -> bytes:
     elif fmt == "rar":
         args = (["unrar", "p", "-inul", f"-p{pw}", path] if pw
                 else ["unrar", "p", "-inul", path])
+    elif fmt == "tar":
+        args = ["tar", "-xOf", path, os.path.basename(entry["expected_file"])]
+    elif fmt.startswith("tar."):
+        # tar + compressor: decompress stream, then untar
+        inner = fmt.split(".", 1)[1]
+        tools = {"gzip": "gzip", "bzip2": "bzip2", "xz": "xz",
+                 "lzma": "lzma", "lz4": "lz4", "zstd": "zstd", "brotli": "brotli"}
+        if inner not in tools:
+            raise ValueError(f"unsupported tar inner: {inner}")
+        r = subprocess.run([tools[inner], "-dc", path], capture_output=True)
+        if r.returncode != 0:
+            raise RuntimeError(f"{tools[inner]} failed: {r.stderr[:200]!r}")
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False) as tmpf:
+            tmpf.write(r.stdout)
+            tmp_path = tmpf.name
+        try:
+            r2 = subprocess.run(["tar", "-xOf", tmp_path, os.path.basename(entry["expected_file"])],
+                                capture_output=True)
+        finally:
+            os.unlink(tmp_path)
+        if r2.returncode != 0:
+            raise RuntimeError(f"tar failed: {r2.stderr[:200]!r}")
+        return r2.stdout
     else:
         raise ValueError(f"unsupported format: {fmt}")
 

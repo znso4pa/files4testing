@@ -1,9 +1,9 @@
 # files4testing — Compression Test Vectors
 
-A collection of **copyright-free raw files**, compressed into **10 formats × 3 layers**
-(normal / password / split-volume) at multiple levels, designed for people who
-implement their own **decompressors / compressors** (e.g. in Rust) and need ready-made,
-machine-verifiable test inputs.
+A collection of **copyright-free raw files**, compressed into **10 formats (+ 7 tar
+variants) × 3 layers** (normal / password / split-volume) at multiple levels,
+designed for people who implement their own **decompressors / compressors**
+(e.g. in Rust) and need ready-made, machine-verifiable test inputs.
 
 [![verify](https://github.com/znso4pa/files4testing/actions/workflows/verify.yml/badge.svg)](https://github.com/znso4pa/files4testing/actions/workflows/verify.yml)
 
@@ -40,9 +40,11 @@ documented below.
 If you are implementing a decompressor from scratch, you need test files — and
 you need to *know* what the correct output is. This repo provides:
 
-- **443 compressed files** in 10 formats (`7z`, `zip`, `rar`, `gzip`, `bzip2`,
-  `xz`, `lzma`, `lz4`, `zstd`, `brotli`), each with a known expected output.
-  (279 test vectors in `manifest.json` + 13 negative cases in `faults/`.)
+- **587 compressed files** in 10 formats plus **7 tar variants** (`7z`, `zip`,
+  `rar`, `gzip`, `bzip2`, `xz`, `lzma`, `lz4`, `zstd`, `brotli`, plus
+  `tar`, `tar.gz`, `tar.bz2`, `tar.xz`, `tar.lzma`, `tar.lz4`, `tar.zst`,
+  `tar.br`), each with a known expected output.
+  (423 test vectors in `manifest.json` + 13 negative cases in `faults/`.)
 - **3 layers**: plain, password-protected (password `123`), and 1 MB split volumes.
 - **`manifest.json`**: a machine-readable catalog mapping every file to its
   expected output **SHA-256**, so you can assert correctness automatically.
@@ -140,9 +142,24 @@ Full-level files (`rawfile1` / `rawfile2` / `rawfile5`–`rawfile8`):
 | zstd | `.zst` | zst-1 / zst-19 / zst-22 |
 | brotli | `.br` | br1 / br6 / br9 |
 
+Tar variants (normal layer only, archive of a single raw file):
+
+| Format | Extension | Levels |
+|--------|-----------|--------|
+| tar (plain) | `.tar.tar` | — |
+| tar + gzip | `.tar.<lvl>.tar.gz` | g1 / g6 / g9 |
+| tar + bzip2 | `.tar.<lvl>.tar.bz2` | b1 / b9 |
+| tar + xz | `.tar.<lvl>.tar.xz` | x1 / x6 / x9 |
+| tar + lzma | `.tar.<lvl>.tar.lzma` | l1 / l9 |
+| tar + lz4 | `.tar.<lvl>.tar.lz4` | lz4-1 / lz4-9 / lz4-12 |
+| tar + zstd | `.tar.<lvl>.tar.zst` | zst-1 / zst-19 / zst-22 |
+| tar + brotli | `.tar.<lvl>.tar.br` | br1 / br6 / br9 |
+
 Lean files (`rawfile3` / `rawfile4` / `combination`): one level per format —
 `7z-mx9`, `zip-z9`, `rar-m5`, `gzip-g9`, `bzip2-b9`, `xz-x9`, `lzma-l9`,
-`lz4-lz4-9`, `zstd-zst-19`, `brotli-br9`.
+`lz4-lz4-9`, `zstd-zst-19`, `brotli-br9`, and `tar` + the max level of each
+compressor (`tar.g9.tar.gz`, `tar.b9.tar.bz2`, `tar.x9.tar.xz`,
+`tar.l9.tar.lzma`, `tar.lz4-9.tar.lz4`, `tar.zst-19.tar.zst`, `tar.br9.tar.br`).
 
 ## Naming convention
 
