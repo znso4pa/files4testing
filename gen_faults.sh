@@ -17,7 +17,12 @@ for f in \
   normal/rawfile1/rawfile1.x9.xz \
   normal/rawfile1/rawfile1.mx9.7z \
   normal/rawfile1/rawfile1.m5.rar \
-  normal/rawfile1/rawfile1.z9.zip; do
+  normal/rawfile1/rawfile1.z9.zip \
+  normal/rawfile1/rawfile1.zst-19.zst \
+  normal/rawfile1/rawfile1.lz4-9.lz4 \
+  normal/rawfile1/rawfile1.b9.bz2 \
+  normal/rawfile1/rawfile1.br9.br \
+  normal/rawfile1/rawfile1.l9.lzma; do
   base=$(basename "$f")
   sz=$(stat -f%z "$f")
   dd if="$f" of="$FAULTS/truncated-$base" bs=1 count=$((sz/2)) 2>/dev/null
@@ -26,7 +31,11 @@ done
 # 2) corrupted: flip bytes in the middle
 for f in \
   normal/rawfile1/rawfile1.g9.gz \
-  normal/rawfile1/rawfile1.mx9.7z; do
+  normal/rawfile1/rawfile1.mx9.7z \
+  normal/rawfile1/rawfile1.z9.zip \
+  normal/rawfile1/rawfile1.m5.rar \
+  normal/rawfile1/rawfile1.x9.xz \
+  normal/rawfile1/rawfile1.l9.lzma; do
   base=$(basename "$f")
   python3 - "$f" "$FAULTS/corrupt-$base" <<'PY'
 import sys
@@ -51,6 +60,7 @@ done
 # 4) missing volume — copy ONLY part01 of a split rar (needs other volumes)
 cp split/rawfile2/rawfile2.m5.part01.rar "$FAULTS/missingvol-rawfile2.part01.rar"
 cp split/combination/combination.m5.part01.rar "$FAULTS/missingvol-combination.part01.rar"
+cp split/rawfile2/rawfile2.mx9.7z.001 "$FAULTS/missingvol-rawfile2.7z.001"
 
 # 5) zero-length file
 : > "$FAULTS/empty.bin"

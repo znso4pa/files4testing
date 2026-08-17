@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -30,19 +31,28 @@ type RawFile struct {
 	SHA256 string `json:"sha256"`
 }
 
+type FileExpect struct {
+	Path   string `json:"path"`
+	Size   uint64 `json:"size"`
+	SHA256 string `json:"sha256"`
+}
+
 type Entry struct {
-	Layer         string `json:"layer"`
-	Kind          string `json:"kind"`
-	Path          string `json:"path"`
-	Format        string `json:"format"`
-	Level         string `json:"level"`
-	IsArchive     bool   `json:"is_archive"`
-	IsVolume      bool   `json:"is_volume"`
-	VolumeCount   *int   `json:"volume_count"`
-	Password      string `json:"password"`
-	ExpectedFile  string `json:"expected_file"`
-	ExpectedSize  uint64 `json:"expected_size"`
-	ExpectedSHA   string `json:"expected_sha256"`
+	Layer         string       `json:"layer"`
+	Kind          string       `json:"kind"`
+	Path          string       `json:"path"`
+	Format        string       `json:"format"`
+	Level         string       `json:"level"`
+	IsArchive     bool         `json:"is_archive"`
+	IsVolume      bool         `json:"is_volume"`
+	VolumeCount   *int         `json:"volume_count"`
+	Password      string       `json:"password"`
+	ExpectedFile  string       `json:"expected_file"`
+	ExpectedSize  uint64       `json:"expected_size"`
+	ExpectedSHA   string       `json:"expected_sha256"`
+	ExpectedFiles []FileExpect `json:"expected_files"`
+	TreeSHA       string       `json:"tree_sha256"`
+	Note          string       `json:"note"`
 }
 
 type Manifest struct {
@@ -72,6 +82,17 @@ func decompress(entry Entry) ([]byte, error) {
 		} else {
 			args = []string{"-p", path}
 		}
+		out, err := exec.Command(name, args...).CombinedOutput()
+		if err == nil {
+			return out, nil
+		}
+		// unzip may not support exotic methods / byte-volumes; fall back to 7z
+		name = "7z"
+		if entry.Password != "" {
+			args = []string{"x", "-so", "-y", "-p" + entry.Password, path}
+		} else {
+			args = []string{"x", "-so", "-y", path}
+		}
 	case "7z":
 		name = "7z"
 		if entry.Password != "" {
@@ -86,6 +107,8 @@ func decompress(entry Entry) ([]byte, error) {
 		} else {
 			args = []string{"p", "-inul", path}
 		}
+	case "iso":
+		name, args = "7z", []string{"x", "-so", "-y", path}
 	case "tar":
 		name = "tar"
 		args = []string{"-xOf", path, filepath.Base(entry.ExpectedFile)}
@@ -140,6 +163,111 @@ func min(a, b int) int {
 	return b
 }
 
+// decompressTree extracts a multi-file / tree entry into outDir using
+// reference tools (mirroring verify.sh). Implement your own when you support
+// tree extraction natively.
+func decompressTree(e Entry, outDir string) error {
+	path := filepath.Join(rootDir, e.Path)
+	var name string
+	args := []string{}
+	switch e.Format {
+	case "iso":
+		name, args = "7z", []string{"x", "-y", "-o" + outDir, path}
+	case "tar":
+		name, args = "tar", []string{"-xf", path, "-C", outDir}
+	case "zip":
+		name = "unzip"
+		if e.Password != "" {
+			args = []string{"-o", "-q", "-P", e.Password, path, "-d", outDir}
+		} else {
+			args = []string{"-o", "-q", path, "-d", outDir}
+		}
+	case "7z":
+		name = "7z"
+		if e.Password != "" {
+			args = []string{"x", "-y", "-o" + outDir, "-p" + e.Password, path}
+		} else {
+			args = []string{"x", "-y", "-o" + outDir, path}
+		}
+	case "rar":
+		name = "unrar"
+		if e.Password != "" {
+			args = []string{"x", "-inul", "-p" + e.Password, path, outDir + "/"}
+		} else {
+			args = []string{"x", "-inul", path, outDir + "/"}
+		}
+	default:
+		if strings.HasPrefix(e.Format, "tar.") {
+			inner := strings.TrimPrefix(e.Format, "tar.")
+			tools := map[string]string{
+				"gzip": "gzip", "bzip2": "bzip2", "xz": "xz",
+				"lzma": "lzma", "lz4": "lz4", "zstd": "zstd", "brotli": "brotli",
+			}
+			tn, ok := tools[inner]
+			if !ok {
+				return fmt.Errorf("unsupported tar inner: %s", inner)
+			}
+			stream, err := exec.Command(tn, "-dc", path).Output()
+			if err != nil {
+				return fmt.Errorf("%s failed: %v", tn, err)
+			}
+			tmp, err := os.CreateTemp("", "tarstream-*")
+			if err != nil {
+				return err
+			}
+			tmpName := tmp.Name()
+			if _, err := tmp.Write(stream); err != nil {
+				tmp.Close()
+				os.Remove(tmpName)
+				return err
+			}
+			tmp.Close()
+			out, err := exec.Command("tar", "-xf", tmpName, "-C", outDir).CombinedOutput()
+			os.Remove(tmpName)
+			if err != nil {
+				return fmt.Errorf("tar failed: %v: %s", err, out)
+			}
+			return nil
+		}
+		return fmt.Errorf("no tree extractor for format: %s", e.Format)
+	}
+	out, err := exec.Command(name, args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s failed: %v: %s", name, err, out[:min(len(out), 200)])
+	}
+	return nil
+}
+
+// checkTree asserts every expected file's sha256 and the whole-tree hash.
+func checkTree(outDir string, e Entry) error {
+	for _, ef := range e.ExpectedFiles {
+		fp := filepath.Join(outDir, filepath.FromSlash(ef.Path))
+		data, err := os.ReadFile(fp)
+		if err != nil {
+			return fmt.Errorf("tree member missing: %s", ef.Path)
+		}
+		if sha256Hex(data) != ef.SHA256 {
+			return fmt.Errorf("tree member mismatch: %s", ef.Path)
+		}
+	}
+	h := sha256.New()
+	efs := append([]FileExpect(nil), e.ExpectedFiles...)
+	sort.Slice(efs, func(i, j int) bool { return efs[i].Path < efs[j].Path })
+	for _, ef := range efs {
+		h.Write([]byte(ef.Path))
+		h.Write([]byte{0})
+		data, err := os.ReadFile(filepath.Join(outDir, filepath.FromSlash(ef.Path)))
+		if err != nil {
+			return err
+		}
+		h.Write(data)
+	}
+	if hex.EncodeToString(h.Sum(nil)) != e.TreeSHA {
+		return fmt.Errorf("tree hash mismatch")
+	}
+	return nil
+}
+
 // ===========================================================================
 // End of user implementation.
 // ===========================================================================
@@ -191,6 +319,32 @@ func main() {
 	for _, e := range m.Entries {
 		if skipBig && e.Kind == "combination" {
 			fmt.Printf("[skip] %s\n", e.Path)
+			continue
+		}
+		if e.Format == "cso" {
+			fmt.Printf("[skip] %s (cso: no reference CLI)\n", e.Path)
+			continue
+		}
+		if len(e.ExpectedFiles) > 0 {
+			// tree entry: extract to a temp dir and assert files + tree hash
+			outDir, err := os.MkdirTemp("", "uu_harness_tree_")
+			if err != nil {
+				fmt.Printf("[error] %s: %v\n", e.Path, err)
+				fail++
+				continue
+			}
+			err = decompressTree(e, outDir)
+			if err == nil {
+				err = checkTree(outDir, e)
+			}
+			os.RemoveAll(outDir)
+			if err != nil {
+				fmt.Printf("[error] %s: %v\n", e.Path, err)
+				fail++
+				continue
+			}
+			fmt.Printf("[ok] %s (%s/%s) tree\n", e.Path, e.Format, e.Level)
+			pass++
 			continue
 		}
 		out, err := decompress(e)

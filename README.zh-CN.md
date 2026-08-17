@@ -1,9 +1,11 @@
 # files4testing — 压缩测试向量
 
-提供多个无版权原始文件，压缩为 **10 种格式 + 7 种 tar 变体 × 3 层**（normal / password / 分卷），供自己实现
-解压器/压缩器（如 Rust）的人直接使用的、可机器校验的测试输入。
+提供多个无版权原始文件，压缩为 **10 种格式 + 7 种 tar 变体 + ISO/CSO × 3 层**（normal / password / 分卷），供自己实现
+解压器/压缩器（如 Rust）的人直接使用的、可机器校验的测试输入。v1.2 新增 ISO 9660 / CSO 向量、
+多文件树归档、各格式特性变体，以及扫描器语料（`scan/`）。
 
-> **注意：本仓库约 2 GB（含 git 历史），clone 所需时间较多，请预留足够磁盘空间与网络带宽。**
+> **注意：本 git 仓库很轻（仅脚本/文档/manifest），实际压缩文件托管在 GitHub Release
+> （约 1.6 GB），见英文 README 的下载说明。**
 
 ## 原始文件
 
@@ -24,9 +26,9 @@
 ## 目录结构
 
 ```
-normal/    无加密无分卷
+normal/    无加密无分卷（全部格式 × 多等级 + iso/cso + 树归档）
 password/  加密，密码统一为 123（仅支持加密的格式：7z/zip/rar）
-split/     1 MB 分卷（仅支持分卷的格式：7z/rar）
+split/     1 MB 分卷（仅支持分卷的格式：7z/rar/zip）
   ├─ rawfile1/      rawfile1 单独压缩
   ├─ rawfile2/      rawfile2 单独压缩
   ├─ rawfile3/      rawfile3 单独压缩
@@ -35,8 +37,10 @@ split/     1 MB 分卷（仅支持分卷的格式：7z/rar）
   ├─ rawfile6/      rawfile6 单独压缩
   ├─ rawfile7/      rawfile7 单独压缩
   ├─ rawfile8/      rawfile8 单独压缩
+  ├─ rawfile_tree/  多文件树归档（iso + tar + 压缩 tar）
   └─ combination/   combination.bin 压缩
 faults/    负向用例（损坏 / 截断 / 错误密码 / 缺卷）
+scan/      扫描器语料（非零偏移嵌入归档 + scan/manifest.json）
 ```
 
 ## 档位策略
@@ -62,6 +66,23 @@ faults/    负向用例（损坏 / 截断 / 错误密码 / 缺卷）
 | lz4 | `.lz4` | lz4-1 / lz4-9 / lz4-12 |
 | zstd | `.zst` | zst-1 / zst-19 / zst-22 |
 | brotli | `.br` | br1 / br6 / br9 |
+
+v1.2 容器/方法变体（normal 层，默认 rawfile1）：
+
+| 变体 | 向量 |
+|------|------|
+| iso | `rawfileN.iso`（单文件）、`rawfile_tree.iso`（多文件树） |
+| cso | `rawfileN.iso.cso`（解压得到对应 `.iso` 字节流） |
+| 7z 方法 | `mlzma`（LZMA）、`mppmd`（PPMd）、`mbz2`（BZip2）、`mcopy`（Copy）、`mbcj`（BCJ+LZMA2） |
+| zip 方法 | `z0`（store）、`zbz2`（BZip2）、`zlzma`（LZMA）；AES-256 `zaes` 在 password/ |
+| gzip | `g9.multi`（两个成员拼接） |
+| zstd | `zst-nocheck`（无校验和）、`zst-nofcs`（无内容大小）、`zst-multi`（两帧） |
+| xz | `xz-sha256`、`xz-block`（多块）、`xz-delta`（delta 滤镜）、`xz-x86`（BCJ 滤镜） |
+| lz4 | `lz4-cs`（含内容大小）、`lz4-legacy`（legacy 帧） |
+| lzma | `l9.size`（已知大小头部） |
+| rar | `m0`（store）、`ms`（solid）；非固实为默认 |
+| tar 树 | `rawfile_tree.tar[.g9.gz/.b9.bz2/.x9.xz/.zst-19.zst]` 多文件 + symlink |
+| split zip | `rawfile2.zsplit.zip.001..`（1 MB 字节分卷） |
 
 tar 系列（仅 normal 层，归档内只含该原始文件）：
 
@@ -94,6 +115,7 @@ password 层所有文件密码为 `123`。7z 使用 `-mhe=on`（加密文件头�
 split 层分卷大小为 1 MB：
 - 7z：`.7z.001`、`.7z.002` ... 从 `.001` 开始解压
 - rar：`.part01.rar`、`.part02.rar` ... 从 `part01` 开始解压
+- zip：`.zip.001`、`.zip.002` ...（7-Zip 字节分卷，从 `.001` 开始）
 
 ## 负向用例（faults/）
 
@@ -101,18 +123,31 @@ split 层分卷大小为 1 MB：
 
 | 类别 | 文件 |
 |------|------|
-| 截断 | `.gz` / `.xz` / `.7z` / `.rar` / `.zip` 各取一半 |
-| 损坏 | 翻转中间字节（`.gz` / `.7z`） |
+| 截断 | `.gz` / `.xz` / `.7z` / `.rar` / `.zip` / `.zst` / `.lz4` / `.bz2` / `.br` / `.lzma` 各取一半 |
+| 损坏 | 翻转中间字节（`.gz` / `.7z` / `.zip` / `.rar` / `.xz` / `.lzma`） |
 | 错误密码 | 用错误密码打开 `password/` 归档 |
-| 缺卷 | 只有 `.rar` 分卷的 `part01` |
+| 缺卷 | 只有 `.rar` 分卷的 `part01` / 只有 `.7z.001` |
 | 空输入 | 零字节文件 |
 
 `verify.sh` 会断言参考工具全部拒绝（`faults/manifest.json` 列出预期失败项）。
 
+## 扫描器语料（scan/）
+
+供 binwalk 式签名扫描器（如 [usefulunpack](https://github.com/znso4pa/usefulunpack) 的 `scan-core`）使用：
+
+- 扫描器可识别的有效小文件：`rawfiles/rawfile_png.png`、`rawfile_gif.gif`、
+  `rawfile_tiff.tiff`、`rawfile_pdf.pdf`、`rawfile_elf.elf`、`rawfile_wav.wav`、`rawfile_mpeg.mpeg`
+- `scan/` 内**非零偏移嵌入归档**：有效 `gz`/`xz`/`lzma`/`zip` 前加 0x1000 字节垃圾，
+  正确扫描器须在偏移 `0x1000` 报告
+- `scan/manifest.json` 记录每项预期格式与偏移
+
+注意：`verify.sh` 对 `cso` 条目标记 SKIP（macOS 无参考 CLI）；cso 正确性在生成期经回环校验，
+并由消费方实现（如 `usefulunpack`）验证。
+
 ## 其他
 
 - `normal/` 中的 `combination` 流式格式（gz/bz2/xz/lzma/lz4/zst）是对 `combination.bin` 直接压缩，与归档格式（7z/zip/rar）内容一致
-- `compress.sh` 为生成脚本，`gen_report.sh` 重新生成 `REPORT.md`（含全部压缩率与 SHA-256）
+- `compress.sh` 为生成脚本，`gen_v12.sh` 生成 v1.2 新增向量，`gen_scan.py` 生成扫描语料，`gen_report.sh` 重新生成 `REPORT.md`（含全部压缩率与 SHA-256）
 - 参考 harness：`harness/`（Rust）、`harness_py/run.py`（Python）、`harness_go/`（Go）
 - 压缩率对比见 `REPORT.md`
 

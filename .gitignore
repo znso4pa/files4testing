@@ -6,3 +6,4 @@ rawfiles/
 harness/target/
 harness_go/harness_go
 harness_py/__pycache__/
+gen_corpus/target/

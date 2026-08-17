@@ -41,14 +41,27 @@
 | normal/rawfile1/rawfile1.g1.gz | 1113 | 651 | 58.49% |
 | normal/rawfile1/rawfile1.g6.gz | 1113 | 639 | 57.41% |
 | normal/rawfile1/rawfile1.g9.gz | 1113 | 639 | 57.41% |
+| normal/rawfile1/rawfile1.g9.multi.gz | 1113 | 1278 | 114.82% |
+| normal/rawfile1/rawfile1.iso | 1113 | 921600 | 82803.23% |
+| normal/rawfile1/rawfile1.iso.cso | 1113 | 14006 | 1258.40% |
 | normal/rawfile1/rawfile1.l1.lzma | 1113 | 693 | 62.26% |
 | normal/rawfile1/rawfile1.l9.lzma | 1113 | 687 | 61.73% |
+| normal/rawfile1/rawfile1.l9.size.lzma | 1113 | 687 | 61.73% |
 | normal/rawfile1/rawfile1.lz4-1.lz4 | 1113 | 927 | 83.29% |
 | normal/rawfile1/rawfile1.lz4-12.lz4 | 1113 | 909 | 81.67% |
 | normal/rawfile1/rawfile1.lz4-9.lz4 | 1113 | 909 | 81.67% |
+| normal/rawfile1/rawfile1.lz4-cs.lz4 | 1113 | 935 | 84.01% |
+| normal/rawfile1/rawfile1.lz4-legacy.lz4 | 1113 | 916 | 82.30% |
+| normal/rawfile1/rawfile1.m0.rar | 1113 | 1192 | 107.10% |
 | normal/rawfile1/rawfile1.m1.rar | 1113 | 716 | 64.33% |
 | normal/rawfile1/rawfile1.m3.rar | 1113 | 721 | 64.78% |
 | normal/rawfile1/rawfile1.m5.rar | 1113 | 721 | 64.78% |
+| normal/rawfile1/rawfile1.mbcj.7z | 1113 | 805 | 72.33% |
+| normal/rawfile1/rawfile1.mbz2.7z | 1113 | 759 | 68.19% |
+| normal/rawfile1/rawfile1.mcopy.7z | 1113 | 1243 | 111.68% |
+| normal/rawfile1/rawfile1.mlzma.7z | 1113 | 798 | 71.70% |
+| normal/rawfile1/rawfile1.mppmd.7z | 1113 | 679 | 61.01% |
+| normal/rawfile1/rawfile1.ms.rar | 1113 | 721 | 64.78% |
 | normal/rawfile1/rawfile1.mx1.7z | 1113 | 812 | 72.96% |
 | normal/rawfile1/rawfile1.mx5.7z | 1113 | 805 | 72.33% |
 | normal/rawfile1/rawfile1.mx9.7z | 1113 | 806 | 72.42% |
@@ -75,12 +88,22 @@
 | normal/rawfile1/rawfile1.x1.xz | 1113 | 748 | 67.21% |
 | normal/rawfile1/rawfile1.x6.xz | 1113 | 740 | 66.49% |
 | normal/rawfile1/rawfile1.x9.xz | 1113 | 740 | 66.49% |
+| normal/rawfile1/rawfile1.xz-block.xz | 1113 | 736 | 66.13% |
+| normal/rawfile1/rawfile1.xz-delta.xz | 1113 | 1088 | 97.75% |
+| normal/rawfile1/rawfile1.xz-sha256.xz | 1113 | 764 | 68.64% |
+| normal/rawfile1/rawfile1.xz-x86.xz | 1113 | 732 | 65.77% |
+| normal/rawfile1/rawfile1.z0.zip | 1113 | 1287 | 115.63% |
 | normal/rawfile1/rawfile1.z1.zip | 1113 | 794 | 71.34% |
 | normal/rawfile1/rawfile1.z6.zip | 1113 | 782 | 70.26% |
 | normal/rawfile1/rawfile1.z9.zip | 1113 | 782 | 70.26% |
+| normal/rawfile1/rawfile1.zbz2.zip | 1113 | 787 | 70.71% |
+| normal/rawfile1/rawfile1.zlzma.zip | 1113 | 841 | 75.56% |
 | normal/rawfile1/rawfile1.zst-1.zst | 1113 | 656 | 58.94% |
 | normal/rawfile1/rawfile1.zst-19.zst | 1113 | 631 | 56.69% |
 | normal/rawfile1/rawfile1.zst-22.zst | 1113 | 631 | 56.69% |
+| normal/rawfile1/rawfile1.zst-multi.zst | 1113 | 1262 | 113.39% |
+| normal/rawfile1/rawfile1.zst-nocheck.zst | 1113 | 641 | 57.59% |
+| normal/rawfile1/rawfile1.zst-nofcs.zst | 1113 | 645 | 57.95% |
 | normal/rawfile2/rawfile2.b1.bz2 | 9383744 | 9346677 | 99.60% |
 | normal/rawfile2/rawfile2.b9.bz2 | 9383744 | 9341365 | 99.55% |
 | normal/rawfile2/rawfile2.br1.br | 9383744 | 9361808 | 99.77% |
@@ -89,6 +112,8 @@
 | normal/rawfile2/rawfile2.g1.gz | 9383744 | 9339856 | 99.53% |
 | normal/rawfile2/rawfile2.g6.gz | 9383744 | 9344539 | 99.58% |
 | normal/rawfile2/rawfile2.g9.gz | 9383744 | 9344539 | 99.58% |
+| normal/rawfile2/rawfile2.iso | 9383744 | 9435136 | 100.55% |
+| normal/rawfile2/rawfile2.iso.cso | 9383744 | 9393136 | 100.10% |
 | normal/rawfile2/rawfile2.l1.lzma | 9383744 | 9399998 | 100.17% |
 | normal/rawfile2/rawfile2.l9.lzma | 9383744 | 9380768 | 99.97% |
 | normal/rawfile2/rawfile2.lz4-1.lz4 | 9383744 | 9383771 | 100.00% |
@@ -173,6 +198,8 @@
 | normal/rawfile5/rawfile5.g1.gz | 1572864 | 1573375 | 100.03% |
 | normal/rawfile5/rawfile5.g6.gz | 1572864 | 1573375 | 100.03% |
 | normal/rawfile5/rawfile5.g9.gz | 1572864 | 1573375 | 100.03% |
+| normal/rawfile5/rawfile5.iso | 1572864 | 1624064 | 103.26% |
+| normal/rawfile5/rawfile5.iso.cso | 1572864 | 1577440 | 100.29% |
 | normal/rawfile5/rawfile5.l1.lzma | 1572864 | 1595662 | 101.45% |
 | normal/rawfile5/rawfile5.l9.lzma | 1572864 | 1594318 | 101.36% |
 | normal/rawfile5/rawfile5.lz4-1.lz4 | 1572864 | 1572883 | 100.00% |
@@ -221,6 +248,8 @@
 | normal/rawfile6/rawfile6.g1.gz | 1950287 | 497761 | 25.52% |
 | normal/rawfile6/rawfile6.g6.gz | 1950287 | 406721 | 20.85% |
 | normal/rawfile6/rawfile6.g9.gz | 1950287 | 399840 | 20.50% |
+| normal/rawfile6/rawfile6.iso | 1950287 | 2002944 | 102.70% |
+| normal/rawfile6/rawfile6.iso.cso | 1950287 | 585620 | 30.03% |
 | normal/rawfile6/rawfile6.l1.lzma | 1950287 | 419808 | 21.53% |
 | normal/rawfile6/rawfile6.l9.lzma | 1950287 | 345783 | 17.73% |
 | normal/rawfile6/rawfile6.lz4-1.lz4 | 1950287 | 695596 | 35.67% |
@@ -389,6 +418,7 @@
 | password/rawfile1/rawfile1.z1.zip | 1113 | 822 | 73.85% |
 | password/rawfile1/rawfile1.z6.zip | 1113 | 810 | 72.78% |
 | password/rawfile1/rawfile1.z9.zip | 1113 | 810 | 72.78% |
+| password/rawfile1/rawfile1.zaes.zip | 1113 | 810 | 72.78% |
 | password/rawfile2/rawfile2.m1.rar | 9383744 | 9346862 | 99.61% |
 | password/rawfile2/rawfile2.m3.rar | 9383744 | 9357614 | 99.72% |
 | password/rawfile2/rawfile2.m5.rar | 9383744 | 9357614 | 99.72% |
@@ -460,6 +490,7 @@
 | split/rawfile2/rawfile2.mx1.7z.* | 9351146 | 9 |
 | split/rawfile2/rawfile2.mx5.7z.* | 9346466 | 9 |
 | split/rawfile2/rawfile2.mx9.7z.* | 9346432 | 9 |
+| split/rawfile2/rawfile2.zsplit.zip.* | 9345750 | 9 |
 | split/rawfile3/rawfile3.m5.* | 8886434 | 9 |
 | split/rawfile3/rawfile3.mx9.7z.* | 8241570 | 8 |
 | split/rawfile4/rawfile4.m5.* | 7556662 | 8 |
@@ -490,3 +521,37 @@
 | split/rawfile8/rawfile8.mx9.7z.* | 416696 | 1 |
 | split/combination/combination.m5.* | 28445855 | 29 |
 | split/combination/combination.mx9.7z.* | 28248684 | 27 |
+
+## v1.2 新增（ISO / CSO / 多文件树 / 扫描语料）
+
+这些向量不是对原始单文件的直接压缩，压缩率无意义，故单独列出：
+
+| 文件 | 大小 (字节) | 说明 |
+|------|------------|------|
+| normal/rawfile1/rawfile1.g9.multi.gz | 1278 | |
+| normal/rawfile1/rawfile1.iso | 921600 | |
+| normal/rawfile1/rawfile1.iso.cso | 14006 | |
+| normal/rawfile1/rawfile1.zst-multi.zst | 1262 | |
+| normal/rawfile2/rawfile2.iso | 9435136 | |
+| normal/rawfile2/rawfile2.iso.cso | 9393136 | |
+| normal/rawfile5/rawfile5.iso | 1624064 | |
+| normal/rawfile5/rawfile5.iso.cso | 1577440 | |
+| normal/rawfile6/rawfile6.iso | 2002944 | |
+| normal/rawfile6/rawfile6.iso.cso | 585620 | |
+| normal/rawfile_tree/rawfile_tree.iso | 12822528 | |
+| normal/rawfile_tree/rawfile_tree.tar | 12765696 | |
+| normal/rawfile_tree/rawfile_tree.tar.b9.tar.bz2 | 9781047 | |
+| normal/rawfile_tree/rawfile_tree.tar.g9.tar.gz | 9985294 | |
+| normal/rawfile_tree/rawfile_tree.tar.x9.tar.xz | 9874260 | |
+| normal/rawfile_tree/rawfile_tree.tar.zst-19.tar.zst | 9887208 | |
+| scan/embedded-rawfile1.g9.gz | 4735 | 扫描语料 |
+| scan/embedded-rawfile1.l9.lzma | 4783 | 扫描语料 |
+| scan/embedded-rawfile1.x9.xz | 4836 | 扫描语料 |
+| scan/embedded-rawfile1.z9.zip | 4878 | 扫描语料 |
+| rawfiles/rawfile_elf.elf | 64 | 扫描语料 |
+| rawfiles/rawfile_gif.gif | 35 | 扫描语料 |
+| rawfiles/rawfile_mpeg.mpeg | 16 | 扫描语料 |
+| rawfiles/rawfile_pdf.pdf | 131 | 扫描语料 |
+| rawfiles/rawfile_png.png | 68 | 扫描语料 |
+| rawfiles/rawfile_tiff.tiff | 119 | 扫描语料 |
+| rawfiles/rawfile_wav.wav | 45 | 扫描语料 |

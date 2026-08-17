@@ -1,0 +1,231 @@
+{
+  "entries": [
+    {
+      "expected_file": "normal/rawfile1/rawfile1.iso",
+      "expected_sha256": "c99180d6ad999fe06e91fcbf73e914620e42af4a4a729d039faf0ca8669bfbcc",
+      "expected_size": 921600,
+      "format": "cso",
+      "is_archive": true,
+      "kind": "rawfile1",
+      "layer": "normal",
+      "level": "iso",
+      "note": "CSO of a single-file ISO; decompress -> ISO byte stream",
+      "path": "normal/rawfile1/rawfile1.iso.cso"
+    },
+    {
+      "expected_file": "normal/rawfile2/rawfile2.iso",
+      "expected_sha256": "2a0a0c8bd7e764919ecb749e9259e1d0b1ef0002b93b253e2d0665ff56454aac",
+      "expected_size": 9435136,
+      "format": "cso",
+      "is_archive": true,
+      "kind": "rawfile2",
+      "layer": "normal",
+      "level": "iso",
+      "note": "CSO of a single-file ISO; decompress -> ISO byte stream",
+      "path": "normal/rawfile2/rawfile2.iso.cso"
+    },
+    {
+      "expected_file": "normal/rawfile5/rawfile5.iso",
+      "expected_sha256": "d4022cde2870f09ccec352c8b26a6de840ec7d7d03f0be7b6e99818dd906570d",
+      "expected_size": 1624064,
+      "format": "cso",
+      "is_archive": true,
+      "kind": "rawfile5",
+      "layer": "normal",
+      "level": "iso",
+      "note": "CSO of a single-file ISO; decompress -> ISO byte stream",
+      "path": "normal/rawfile5/rawfile5.iso.cso"
+    },
+    {
+      "expected_file": "normal/rawfile6/rawfile6.iso",
+      "expected_sha256": "205542b8ba22f6cf623a2e9c9207b6ce4fa4edd20191078c45e201c63998ea83",
+      "expected_size": 2002944,
+      "format": "cso",
+      "is_archive": true,
+      "kind": "rawfile6",
+      "layer": "normal",
+      "level": "iso",
+      "note": "CSO of a single-file ISO; decompress -> ISO byte stream",
+      "path": "normal/rawfile6/rawfile6.iso.cso"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "iso",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "tree",
+      "note": "ISO9660 with a directory tree (multi-file).",
+      "path": "normal/rawfile_tree/rawfile_tree.iso"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "tar",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "tree",
+      "note": "Multi-file tar with a directory tree plus one symlink member.",
+      "path": "normal/rawfile_tree/rawfile_tree.tar"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "tar.gzip",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "g9",
+      "note": "Compressed multi-file tar tree.",
+      "path": "normal/rawfile_tree/rawfile_tree.tar.g9.tar.gz"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "tar.bzip2",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "b9",
+      "note": "Compressed multi-file tar tree.",
+      "path": "normal/rawfile_tree/rawfile_tree.tar.b9.tar.bz2"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "tar.xz",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "x9",
+      "note": "Compressed multi-file tar tree.",
+      "path": "normal/rawfile_tree/rawfile_tree.tar.x9.tar.xz"
+    },
+    {
+      "files": [
+        {
+          "path": "rawfile1.txt",
+          "raw": "rawfiles/rawfile1.txt"
+        },
+        {
+          "path": "data/rawfile2.jpg",
+          "raw": "rawfiles/rawfile2.jpg"
+        },
+        {
+          "path": "data/rawfile6.json",
+          "raw": "rawfiles/rawfile6.json"
+        },
+        {
+          "path": "data/sub/rawfile7.c",
+          "raw": "rawfiles/rawfile7.c"
+        }
+      ],
+      "format": "tar.zstd",
+      "kind": "rawfile_tree",
+      "layer": "normal",
+      "level": "zst-19",
+      "note": "Compressed multi-file tar tree.",
+      "path": "normal/rawfile_tree/rawfile_tree.tar.zst-19.tar.zst"
+    },
+    {
+      "expected_file": null,
+      "expected_sha256": "5ea53f89e5f3fb3b0910f433c0920f2a46bec86957235e9b7184bfc361b9920d",
+      "expected_size": 2226,
+      "format": "gzip",
+      "kind": "rawfile1",
+      "layer": "normal",
+      "level": "multi",
+      "note": "Two concatenated gzip members of rawfile1.",
+      "path": "normal/rawfile1/rawfile1.g9.multi.gz"
+    },
+    {
+      "expected_file": null,
+      "expected_sha256": "5ea53f89e5f3fb3b0910f433c0920f2a46bec86957235e9b7184bfc361b9920d",
+      "expected_size": 2226,
+      "format": "zstd",
+      "kind": "rawfile1",
+      "layer": "normal",
+      "level": "multi",
+      "note": "Two concatenated zstd frames of rawfile1.",
+      "path": "normal/rawfile1/rawfile1.zst-multi.zst"
+    }
+  ],
+  "version": 1
+}

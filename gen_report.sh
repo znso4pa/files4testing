@@ -104,4 +104,24 @@ for pair in "${KINDS[@]}"; do
   done
 done
 
+cat >> REPORT.md <<'EOF'
+
+## v1.2 新增（ISO / CSO / 多文件树 / 扫描语料）
+
+这些向量不是对原始单文件的直接压缩，压缩率无意义，故单独列出：
+
+| 文件 | 大小 (字节) | 说明 |
+|------|------------|------|
+EOF
+
+for f in $(find normal -type f \( -name "*.iso" -o -name "*.iso.cso" -o -name "*multi*" \) \
+           -o -path "normal/rawfile_tree/*" -type f | sort -u); do
+  echo "| $f | $(stat -f%z "$f") | |" >> REPORT.md
+done
+for f in $(find scan -type f ! -name "manifest.json" | sort -u; \
+           find rawfiles -type f \( -name "*.png" -o -name "*.gif" -o -name "*.tiff" \
+           -o -name "*.pdf" -o -name "*.elf" -o -name "*.wav" -o -name "*.mpeg" \) | sort -u); do
+  echo "| $f | $(stat -f%z "$f") | 扫描语料 |" >> REPORT.md
+done
+
 echo "REPORT.md 已生成"

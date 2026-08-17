@@ -1,0 +1,72 @@
+{
+  "name": "files4testing scan corpus",
+  "description": "Scanner-oriented vectors: valid files of scanner-detected formats (raw kind, offset 0) and archives embedded at a non-zero offset (embedded kind). A correct scanner must report each file at the given offset and format.",
+  "entries": [
+    {
+      "path": "rawfiles/rawfile_png.png",
+      "format": "png",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_gif.gif",
+      "format": "gif",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_tiff.tiff",
+      "format": "tiff",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_pdf.pdf",
+      "format": "pdf",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_elf.elf",
+      "format": "elf",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_wav.wav",
+      "format": "wav",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "rawfiles/rawfile_mpeg.mpeg",
+      "format": "mpeg",
+      "offset": 0,
+      "kind": "raw"
+    },
+    {
+      "path": "scan/embedded-rawfile1.g9.gz",
+      "format": "gzip",
+      "offset": 4096,
+      "kind": "embedded"
+    },
+    {
+      "path": "scan/embedded-rawfile1.x9.xz",
+      "format": "xz",
+      "offset": 4096,
+      "kind": "embedded"
+    },
+    {
+      "path": "scan/embedded-rawfile1.l9.lzma",
+      "format": "lzma",
+      "offset": 4096,
+      "kind": "embedded"
+    },
+    {
+      "path": "scan/embedded-rawfile1.z9.zip",
+      "format": "zip",
+      "offset": 4096,
+      "kind": "embedded"
+    }
+  ]
+}

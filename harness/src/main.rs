@@ -9,6 +9,7 @@
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -16,6 +17,14 @@ use std::path::{Path, PathBuf};
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct RawFile {
+    path: String,
+    size: u64,
+    sha256: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct FileExpect {
     path: String,
     size: u64,
     sha256: String,
@@ -33,9 +42,15 @@ struct Entry {
     is_volume: bool,
     volume_count: Option<usize>,
     password: Option<String>,
-    expected_file: String,
-    expected_size: u64,
-    expected_sha256: String,
+    expected_file: Option<String>,
+    expected_size: Option<u64>,
+    expected_sha256: Option<String>,
+    #[serde(default)]
+    expected_files: Option<Vec<FileExpect>>,
+    #[serde(default)]
+    tree_sha256: Option<String>,
+    #[serde(default)]
+    note: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,6 +99,70 @@ trait Decompressor {
     fn decompress_volume(&self, entry: &Entry, input: &[u8]) -> Result<Vec<u8>, Box<dyn Error>> {
         self.decompress(entry, input)
     }
+
+    /// Decompress a multi-file / tree entry into `out_dir`.
+    /// The default implementation shells out to reference tools (7z/tar/unzip/
+    /// unrar), mirroring `verify.sh`. Implement your own when you support tree
+    /// extraction natively.
+    fn decompress_tree(&self, entry: &Entry, input: &[u8], out_dir: &Path) -> Result<(), Box<dyn Error>> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        let tmp = root.join(".harness_tree_input");
+        std::fs::write(&tmp, input)?;
+        let path = tmp.to_str().unwrap().to_string();
+        let out = out_dir.to_str().unwrap().to_string();
+        let res: Result<Vec<u8>, Box<dyn Error>> = match entry.format.as_str() {
+            "iso" => tool("7z", &["x", "-y", &format!("-o{out}"), &path], &root),
+            "tar" => tool("tar", &["-xf", &path, "-C", &out], &root),
+            "zip" => {
+                if let Some(pw) = &entry.password {
+                    tool("unzip", &["-o", "-q", "-P", pw, &path, "-d", &out], &root)
+                } else {
+                    tool("unzip", &["-o", "-q", &path, "-d", &out], &root)
+                }
+            }
+            "7z" => {
+                if let Some(pw) = &entry.password {
+                    tool("7z", &["x", "-y", &format!("-o{out}"), &format!("-p{pw}"), &path], &root)
+                } else {
+                    tool("7z", &["x", "-y", &format!("-o{out}"), &path], &root)
+                }
+            }
+            "rar" => {
+                if let Some(pw) = &entry.password {
+                    tool("unrar", &["x", "-inul", &format!("-p{pw}"), &path, &format!("{out}/")], &root)
+                } else {
+                    tool("unrar", &["x", "-inul", &path, &format!("{out}/")], &root)
+                }
+            }
+            other => {
+                if let Some(inner) = other.strip_prefix("tar.") {
+                    let (tool_name, flag) = match inner {
+                        "gzip" => ("gzip", "-dc"),
+                        "bzip2" => ("bzip2", "-dc"),
+                        "xz" => ("xz", "-dc"),
+                        "lzma" => ("lzma", "-dc"),
+                        "lz4" => ("lz4", "-dc"),
+                        "zstd" => ("zstd", "-dc"),
+                        "brotli" => ("brotli", "-dc"),
+                        _ => return Err(format!("unsupported tar inner: {inner}").into()),
+                    };
+                    let stream = tool(tool_name, &[flag, &path], &root)?;
+                    let tmpgz = root.join(".harness_tree_stream");
+                    std::fs::write(&tmpgz, &stream)?;
+                    let r = tool("tar", &["-xf", tmpgz.to_str().unwrap(), "-C", &out], &root);
+                    let _ = std::fs::remove_file(&tmpgz);
+                    r
+                } else {
+                    Err(format!("no tree extractor for format: {other}").into())
+                }
+            }
+        };
+        let _ = std::fs::remove_file(&tmp);
+        res.map(|_| ())
+    }
 }
 
 /// =========================================================================
@@ -112,10 +191,21 @@ impl Decompressor for MyDecompressor {
             "zstd" => tool("zstd", &["-dc", path], cwd),
             "brotli" => tool("brotli", &["-dc", path], cwd),
             "zip" => {
-                if let Some(pw) = &entry.password {
+                let r = if let Some(pw) = &entry.password {
                     tool("unzip", &["-P", pw, "-p", path], cwd)
                 } else {
                     tool("unzip", &["-p", path], cwd)
+                };
+                match r {
+                    Ok(v) => Ok(v),
+                    Err(_) => {
+                        // unzip may not support exotic methods / byte-volumes
+                        if let Some(pw) = &entry.password {
+                            tool("7z", &["x", "-so", "-y", &format!("-p{pw}"), path], cwd)
+                        } else {
+                            tool("7z", &["x", "-so", "-y", path], cwd)
+                        }
+                    }
                 }
             }
             "7z" => {
@@ -132,10 +222,11 @@ impl Decompressor for MyDecompressor {
                     tool("unrar", &["p", "-inul", path], cwd)
                 }
             }
+            "iso" => tool("7z", &["x", "-so", "-y", path], cwd),
             "tar" => {
-                let f = Path::new(&entry.expected_file)
+                let f = Path::new(entry.expected_file.as_deref().unwrap_or(""))
                     .file_name()
-                    .unwrap()
+                    .unwrap_or_default()
                     .to_string_lossy()
                     .into_owned();
                 tool("tar", &["-xOf", path, &f], cwd)
@@ -153,9 +244,9 @@ impl Decompressor for MyDecompressor {
                         "brotli" => ("brotli", "-dc"),
                         _ => return Err(format!("unsupported tar inner: {inner}").into()),
                     };
-                    let f = Path::new(&entry.expected_file)
+                    let f = Path::new(entry.expected_file.as_deref().unwrap_or(""))
                         .file_name()
-                        .unwrap()
+                        .unwrap_or_default()
                         .to_string_lossy()
                         .into_owned();
                     let stream = tool(tool_name, &[flag, path], cwd)?;
@@ -198,6 +289,63 @@ fn sha256(data: &[u8]) -> String {
     hex::encode(h.finalize())
 }
 
+fn sha256_file(path: &Path) -> Option<String> {
+    let data = fs::read(path).ok()?;
+    Some(sha256(&data))
+}
+
+/// Walk `dir`, return rel-path -> sha256 for every file.
+fn walk_hashes(dir: &Path) -> BTreeMap<String, String> {
+    let mut out = BTreeMap::new();
+    let mut stack: Vec<PathBuf> = vec![dir.to_path_buf()];
+    while let Some(d) = stack.pop() {
+        if let Ok(entries) = fs::read_dir(&d) {
+            for e in entries.flatten() {
+                if e.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                    stack.push(e.path());
+                } else if let Some(h) = sha256_file(&e.path()) {
+                    let p = e.path();
+                    let rel = p.strip_prefix(dir).unwrap_or(&p).to_path_buf();
+                    out.insert(rel.to_string_lossy().into_owned(), h);
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Assert every expected file's sha256 and the whole-tree hash.
+fn check_tree(dir: &Path, entry: &Entry) -> (bool, String) {
+    let files = entry.expected_files.as_ref().unwrap();
+    let got = walk_hashes(dir);
+    for ef in files {
+        match got.get(&ef.path) {
+            Some(h) if h == &ef.sha256 => {}
+            Some(_) => return (false, format!("mismatch {}", ef.path)),
+            None => return (false, format!("missing {}", ef.path)),
+        }
+    }
+    // tree_sha256 over sorted path + "\0" + content
+    let mut h = Sha256::new();
+    let mut sorted: Vec<&FileExpect> = files.iter().collect();
+    sorted.sort_by_key(|ef| &ef.path);
+    for ef in sorted {
+        h.update(ef.path.as_bytes());
+        h.update(b"\0");
+        match fs::read(dir.join(&ef.path)) {
+            Ok(data) => h.update(&data),
+            Err(_) => return (false, format!("missing {}", ef.path)),
+        }
+    }
+    let got_tree = hex::encode(h.finalize());
+    let want_tree = entry.tree_sha256.as_deref().unwrap_or("");
+    if got_tree == want_tree {
+        (true, format!("{} files", files.len()))
+    } else {
+        (false, format!("tree hash mismatch"))
+    }
+}
+
 fn run() -> Result<(), Box<dyn Error>> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -224,6 +372,10 @@ fn run() -> Result<(), Box<dyn Error>> {
             println!("[skip] {path} (SKIP_COMBINATION set)", path = entry.path);
             continue;
         }
+        if entry.format == "cso" {
+            println!("[skip] {path} (cso: no reference CLI)", path = entry.path);
+            continue;
+        }
         let full = root.join(&entry.path);
         if !full.exists() {
             println!("MISSING {path}", path = entry.path);
@@ -231,6 +383,30 @@ fn run() -> Result<(), Box<dyn Error>> {
             continue;
         }
         let input = fs::read(&full)?;
+        if entry.expected_files.is_some() {
+            // tree entry: extract to a temp dir and assert each file + tree hash
+            let out = root.join(".harness_tree_out");
+            let _ = fs::remove_dir_all(&out);
+            fs::create_dir_all(&out)?;
+            let t0 = std::time::Instant::now();
+            match d.decompress_tree(entry, &input, &out) {
+                Ok(()) => {
+                    let (ok, detail) = check_tree(&out, entry);
+                    let mark = if ok { "ok" } else { "MISMATCH" };
+                    println!(
+                        "[{mark}] {path} ({fmt}/{lvl}) tree {detail} {dt:.2?}",
+                        path = entry.path, fmt = entry.format, lvl = entry.level,
+                        detail = detail, dt = t0.elapsed());
+                    if ok { pass += 1 } else { fail += 1 }
+                }
+                Err(e) => {
+                    println!("[error] {path}: {e}", path = entry.path);
+                    fail += 1;
+                }
+            }
+            let _ = fs::remove_dir_all(&out);
+            continue;
+        }
         let result = if entry.is_volume {
             d.decompress_volume(entry, &input)
         } else {
@@ -240,7 +416,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         match result {
             Ok(bytes) => {
                 let got = sha256(&bytes);
-                let ok = got == entry.expected_sha256;
+                let ok = entry.expected_sha256.as_deref() == Some(&got);
                 let mark = if ok { "ok" } else { "MISMATCH" };
                 println!(
                     "[{mark}] {path} ({fmt}/{lvl}) len={} {got}",
@@ -294,9 +470,12 @@ fn run() -> Result<(), Box<dyn Error>> {
                 is_volume: false,
                 volume_count: None,
                 password: fe.password.clone(),
-                expected_file: String::new(),
-                expected_size: 0,
-                expected_sha256: String::new(),
+                expected_file: None,
+                expected_size: None,
+                expected_sha256: None,
+                expected_files: None,
+                tree_sha256: None,
+                note: None,
             };
             match d.decompress(&entry, &input) {
                 Ok(_) => {

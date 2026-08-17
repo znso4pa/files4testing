@@ -33,6 +33,36 @@
       "password": null
     },
     {
+      "path": "faults/truncated-rawfile1.zst-19.zst",
+      "format": "zstd",
+      "reason": "truncated zstd stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.lz4-9.lz4",
+      "format": "lz4",
+      "reason": "truncated lz4 stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.b9.bz2",
+      "format": "bzip2",
+      "reason": "truncated bzip2 stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.br9.br",
+      "format": "brotli",
+      "reason": "truncated brotli stream",
+      "password": null
+    },
+    {
+      "path": "faults/truncated-rawfile1.l9.lzma",
+      "format": "lzma",
+      "reason": "truncated lzma stream",
+      "password": null
+    },
+    {
       "path": "faults/corrupt-rawfile1.g9.gz",
       "format": "gzip",
       "reason": "corrupted gzip stream (CRC)",
@@ -42,6 +72,30 @@
       "path": "faults/corrupt-rawfile1.mx9.7z",
       "format": "7z",
       "reason": "corrupted 7z archive",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.z9.zip",
+      "format": "zip",
+      "reason": "corrupted zip archive (CRC)",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.m5.rar",
+      "format": "rar",
+      "reason": "corrupted rar archive",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.x9.xz",
+      "format": "xz",
+      "reason": "corrupted xz stream",
+      "password": null
+    },
+    {
+      "path": "faults/corrupt-rawfile1.l9.lzma",
+      "format": "lzma",
+      "reason": "corrupted lzma stream",
       "password": null
     },
     {
@@ -72,6 +126,12 @@
       "path": "faults/missingvol-combination.part01.rar",
       "format": "rar",
       "reason": "missing subsequent rar volumes",
+      "password": null
+    },
+    {
+      "path": "faults/missingvol-rawfile2.7z.001",
+      "format": "7z",
+      "reason": "missing subsequent 7z volumes",
       "password": null
     },
     {

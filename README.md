@@ -1,9 +1,11 @@
 # files4testing — Compression Test Vectors
 
 A collection of **copyright-free raw files**, compressed into **10 formats (+ 7 tar
-variants) × 3 layers** (normal / password / split-volume) at multiple levels,
-designed for people who implement their own **decompressors / compressors**
-(e.g. in Rust) and need ready-made, machine-verifiable test inputs.
+variants + ISO/CSO) × 3 layers** (normal / password / split-volume) at multiple
+levels, designed for people who implement their own **decompressors /
+compressors** (e.g. in Rust) and need ready-made, machine-verifiable test
+inputs. v1.2 adds ISO 9660 / CSO vectors, multi-file tree archives, per-format
+feature variants, and a scanner-oriented corpus (`scan/`).
 
 [![verify](https://github.com/znso4pa/files4testing/actions/workflows/verify.yml/badge.svg)](https://github.com/znso4pa/files4testing/actions/workflows/verify.yml)
 
@@ -33,21 +35,25 @@ tar xzf rawfiles.tar.gz
 
 After extraction the working tree matches a full checkout, and
 `./verify.sh`, the Rust/Python/Go harnesses, and `manifest.json` all work as
-documented below.
+documented below. (`scan/` is bundled inside `rawfiles.tar.gz`.)
 
 ## Why this exists
 
 If you are implementing a decompressor from scratch, you need test files — and
 you need to *know* what the correct output is. This repo provides:
 
-- **587 compressed files** in 10 formats plus **7 tar variants** (`7z`, `zip`,
-  `rar`, `gzip`, `bzip2`, `xz`, `lzma`, `lz4`, `zstd`, `brotli`, plus
-  `tar`, `tar.gz`, `tar.bz2`, `tar.xz`, `tar.lzma`, `tar.lz4`, `tar.zst`,
-  `tar.br`), each with a known expected output.
-  (423 test vectors in `manifest.json` + 13 negative cases in `faults/`.)
+- **635 compressed files** in 10 formats plus **7 tar variants**, plus **ISO/CSO**
+  and **multi-file tree archives** (`7z`, `zip`, `rar`, `gzip`, `bzip2`, `xz`,
+  `lzma`, `lz4`, `zstd`, `brotli`, `iso`, `cso`, plus `tar`, `tar.gz`, `tar.bz2`,
+  `tar.xz`, `tar.lzma`, `tar.lz4`, `tar.zst`, `tar.br`), each with a known
+  expected output.
+  (484 test vectors in `manifest.json` + 23 negative cases in `faults/` + 4
+  embedded-at-offset vectors in `scan/`.)
 - **3 layers**: plain, password-protected (password `123`), and 1 MB split volumes.
 - **`manifest.json`**: a machine-readable catalog mapping every file to its
-  expected output **SHA-256**, so you can assert correctness automatically.
+  expected output **SHA-256** (or, for multi-file tree entries, an
+  `expected_files` list + `tree_sha256`), so you can assert correctness
+  automatically.
 - Raw files spanning very different compressibility: tiny text, incompressible
   JPEG, 30 MB highly-compressible text, 30 MB semi-compressible 32-bit RGBA
   bitmap, random data, JSON, source code, and DNA (FASTA).
@@ -82,7 +88,14 @@ Example entry from `manifest.json`:
 ```
 
 For volume entries (`is_volume: true`), the listed `path` is the **first
-volume** (`.part01.rar` / `.7z.001`); decompress the whole set to get the output.
+volume** (`.part01.rar` / `.7z.001` / `.zip.001`); decompress the whole set to get the output.
+
+For **tree entries** (`expected_files` present), extract the whole archive and
+assert every member's SHA-256 plus `tree_sha256` (a hash over sorted
+`path\0bytes` concatenation). `cso` entries decompress to an **ISO byte stream**
+(the `expected_file` is the matching `.iso`, whose own entry describes the tree).
+Multi-member streams (e.g. `rawfile1.g9.multi.gz`) have `expected_file: null`
+and output the concatenation of their members.
 
 ## Raw files
 
@@ -103,9 +116,9 @@ SHA-256 of every raw file is in `REPORT.md` and `manifest.json`.
 ## Directory layout
 
 ```
-normal/    no encryption, no volumes (all formats × multiple levels)
+normal/    no encryption, no volumes (all formats × multiple levels + iso/cso + tree)
 password/  encrypted, password is 123 (formats supporting encryption: 7z/zip/rar)
-split/     1 MB split volumes (formats supporting volumes: 7z/rar)
+split/     1 MB split volumes (formats supporting volumes: 7z/rar/zip)
   ├─ rawfile1/      rawfile1 compressed
   ├─ rawfile2/      rawfile2 compressed
   ├─ rawfile3/      rawfile3 compressed
@@ -114,8 +127,10 @@ split/     1 MB split volumes (formats supporting volumes: 7z/rar)
   ├─ rawfile6/      rawfile6 compressed
   ├─ rawfile7/      rawfile7 compressed
   ├─ rawfile8/      rawfile8 compressed
+  ├─ rawfile_tree/  multi-file tree archives (iso + tar + compressed tars)
   └─ combination/   combination.bin compressed
 faults/    negative cases (corrupted / truncated / wrong-password / missing-volume)
+scan/      scanner corpus (embedded-at-offset archives + scan/manifest.json)
 ```
 
 ## Level strategy
@@ -141,6 +156,23 @@ Full-level files (`rawfile1` / `rawfile2` / `rawfile5`–`rawfile8`):
 | lz4 | `.lz4` | lz4-1 / lz4-9 / lz4-12 |
 | zstd | `.zst` | zst-1 / zst-19 / zst-22 |
 | brotli | `.br` | br1 / br6 / br9 |
+
+v1.2 container/method variants (normal layer, rawfile1 unless noted):
+
+| Variant | Vectors |
+|---------|---------|
+| iso | `rawfileN.iso` (single-file), `rawfile_tree.iso` (multi-file tree) |
+| cso | `rawfileN.iso.cso` (decompress → the matching `.iso` byte stream) |
+| 7z methods | `mlzma` (LZMA), `mppmd` (PPMd), `mbz2` (BZip2), `mcopy` (Copy), `mbcj` (BCJ+LZMA2) |
+| zip methods | `z0` (stored), `zbz2` (BZip2), `zlzma` (LZMA); AES-256 `zaes` in password/ |
+| gzip | `g9.multi` (two concatenated members) |
+| zstd | `zst-nocheck` (no checksum), `zst-nofcs` (no content size), `zst-multi` (two frames) |
+| xz | `xz-sha256`, `xz-block` (multi-block), `xz-delta` (delta filter), `xz-x86` (BCJ filter) |
+| lz4 | `lz4-cs` (content size), `lz4-legacy` (legacy frame) |
+| lzma | `l9.size` (known-size header) |
+| rar | `m0` (store), `ms` (solid); non-solid = default |
+| tar tree | `rawfile_tree.tar[.g9.gz/.b9.bz2/.x9.xz/.zst-19.zst]` multi-file + symlink |
+| split zip | `rawfile2.zsplit.zip.001..` (1 MB byte volumes) |
 
 Tar variants (normal layer only, archive of a single raw file):
 
@@ -184,21 +216,42 @@ not crash, not emit output):
 
 | Category | Files |
 |----------|-------|
-| Truncated | half of a `.gz` / `.xz` / `.7z` / `.rar` / `.zip` |
-| Corrupted | flipped bytes mid-file (`.gz` / `.7z`) |
+| Truncated | half of a `.gz` / `.xz` / `.7z` / `.rar` / `.zip` / `.zst` / `.lz4` / `.bz2` / `.br` / `.lzma` |
+| Corrupted | flipped bytes mid-file (`.gz` / `.7z` / `.zip` / `.rar` / `.xz` / `.lzma`) |
 | Wrong password | `password/` archives opened with an incorrect password |
-| Missing volumes | only `part01` of a split `.rar` present |
+| Missing volumes | only `part01` of a split `.rar` / only `.7z.001` present |
 | Empty | zero-length input |
 
 `verify.sh` asserts reference tools reject all of them
 (`faults/manifest.json` lists the expected failures).
+
+## Scanner corpus (`scan/`)
+
+For binwalk-style signature scanners (e.g. `scan-core` in
+[usefulunpack](https://github.com/znso4pa/usefulunpack)):
+
+- Small valid files of detected formats not in the compression matrix:
+  `rawfiles/rawfile_png.png`, `rawfile_gif.gif`, `rawfile_tiff.tiff`,
+  `rawfile_pdf.pdf`, `rawfile_elf.elf`, `rawfile_wav.wav`,
+  `rawfile_mpeg.mpeg`.
+- **Embedded-at-offset archives** in `scan/`: valid `gz`/`xz`/`lzma`/`zip`
+  preceded by 0x1000 bytes of garbage. A correct scanner must report each at
+  offset `0x1000`.
+- `scan/manifest.json` catalogs both kinds with expected offsets.
+
+Note: `verify.sh` marks `cso` entries as SKIP — there is no reference CLI for
+CSO on macOS; cso correctness is validated at generation time by round-trip
+(and by consumer implementations such as `usefulunpack`).
 
 ## Tooling
 
 | Script | Purpose |
 |--------|---------|
 | `compress.sh` | Regenerate all compressed files from `rawfiles/` |
-| `gen_manifest.py` | Generate `manifest.json` (test vector catalog) |
+| `gen_v12.sh` | Regenerate the v1.2 additions (ISO via hdiutil, CLI method variants, runs `gen_corpus`) |
+| `gen_corpus/` | Rust generator: CSO, multi-file tar tree, derived streams, `corpus_spec.json` |
+| `gen_scan.py` | Generate scanner rawfiles + `scan/` embedded vectors + `scan/manifest.json` |
+| `gen_manifest.py` | Generate `manifest.json` (test vector catalog, v1.2 schema) |
 | `gen_report.sh` | Generate `REPORT.md` (sizes, ratios, SHA-256) |
 | `verify.sh` | Decompress every file with reference tools and assert SHA-256 (incl. negative cases) |
 | `gen_faults.sh` / `gen_faults_manifest.py` | Generate negative cases and `faults/manifest.json` |
